@@ -1,0 +1,11 @@
+/* The interface itself is written in both languages in the code (tr("…", "…")). This table holds only what macOS
+   reads on its own: the names and descriptions of the actions in Shortcuts and Siri. */
+
+"Start Recording" = "Начать запись";
+"Starts recording the call app and your microphone in Transcribation." = "Начинает запись приложения звонка и вашего микрофона в Transcribation.";
+"Stop Recording" = "Остановить запись";
+"Stops and saves the running recording in Transcribation." = "Останавливает и сохраняет текущую запись в Transcribation.";
+"Mark Important Moment" = "Отметить важное";
+"Marks the current moment of the running recording as important." = "Отмечает текущий момент записи как важный.";
+"Last Meeting Summary" = "Итоги последней встречи";
+"Returns the summary, decisions and tasks of your latest summarised meeting." = "Возвращает итоги, решения и задачи последней встречи, для которой есть итоги.";

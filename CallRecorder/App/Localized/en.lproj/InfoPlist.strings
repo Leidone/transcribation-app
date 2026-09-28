@@ -1,0 +1,10 @@
+/* Shown by macOS when the app first asks for the microphone. */
+"NSMicrophoneUsageDescription" = "Transcribation records your voice during a call so you get a transcript and a summary.";
+/* Shown by macOS when the app first asks to record another app's sound. */
+"NSAudioCaptureUsageDescription" = "Transcribation records the sound of the app you choose so you get a transcript and a summary of the call.";
+/* Shown by macOS when tasks are first sent to Reminders. */
+"NSRemindersFullAccessUsageDescription" = "Transcribation adds tasks from a call to Reminders when you ask it to.";
+/* Shown by macOS when the calendar option is first turned on. */
+"NSCalendarsFullAccessUsageDescription" = "Transcribation takes the meeting title and the invited people from the event the recording was made during. The calendar is never changed.";
+/* The author, shown in the About window and in Settings. */
+"NSHumanReadableCopyright" = "© 2026 Alex Berezkin";

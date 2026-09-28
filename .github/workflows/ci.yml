@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main, macos]
+  pull_request:
+
+# A new push to the same branch cancels the run still going: macOS minutes are the expensive ones.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos:
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s "$(ls -d /Applications/Xcode*.app | sort -V | tail -1)"
+
+      - name: Cache SwiftPM
+        uses: actions/cache@v4
+        with:
+          path: |
+            Packages/CallRecorderKit/.build
+            ~/Library/Caches/org.swift.swiftpm
+          key: spm-${{ runner.os }}-${{ hashFiles('Packages/CallRecorderKit/Package.resolved', 'Packages/CallRecorderKit/Package.swift') }}
+          restore-keys: spm-${{ runner.os }}-
+
+      - name: Package tests
+        working-directory: Packages/CallRecorderKit
+        run: swift test
+
+      - name: Build the macOS app
+        run: |
+          brew install xcodegen
+          xcodegen generate
+          # The plists and entitlements XcodeGen writes are committed: a build must not change them.
+          git diff --stat
+          git diff --exit-code -- CallRecorder CallRecorderMobile
+          xcodebuild build -project CallRecorder.xcodeproj -scheme CallRecorder -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO -quiet

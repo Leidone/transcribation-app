@@ -1,0 +1,7 @@
+/* What Siri listens for in English; every phrase keeps the app's name. */
+"Start recording in ${applicationName}" = "Start recording in ${applicationName}";
+"Record the call in ${applicationName}" = "Record the call in ${applicationName}";
+"Stop recording in ${applicationName}" = "Stop recording in ${applicationName}";
+"Last meeting summary in ${applicationName}" = "Last meeting summary in ${applicationName}";
+"What was decided in ${applicationName}" = "What was decided in ${applicationName}";
+"Mark this moment in ${applicationName}" = "Mark this moment in ${applicationName}";

@@ -1,0 +1,158 @@
+name: CallRecorder
+options:
+  bundleIdPrefix: app.callrecorder
+  # English is the fallback when the system prefers neither English nor Russian; both are in the bundle.
+  developmentLanguage: en
+  createIntermediateGroups: true
+  deploymentTarget:
+    macOS: "26.0"
+    iOS: "26.0"
+packages:
+  CallRecorderKit:
+    path: Packages/CallRecorderKit
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: "2.9.0"
+targets:
+  CallRecorder:
+    type: application
+    platform: macOS
+    sources:
+      - path: CallRecorder/App
+        excludes:
+          - Info.plist
+          - CallRecorder.entitlements
+    dependencies:
+      - package: CallRecorderKit
+        product: AudioCapture
+      - package: CallRecorderKit
+        product: CodexClient
+      - package: CallRecorderKit
+        product: Transcription
+      - package: CallRecorderKit
+        product: CallLibrary
+      - package: CallRecorderKit
+        product: Localization
+      - package: Sparkle
+    info:
+      path: CallRecorder/App/Info.plist
+      properties:
+        CFBundleDisplayName: Transcribation
+        CFBundleName: Transcribation
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSUIElement: true
+        LSMinimumSystemVersion: "26.0"
+        CFBundleLocalizations: [en, ru]
+        # Shown in the About window; the Russian one is in ru.lproj/InfoPlist.strings.
+        NSHumanReadableCopyright: "© 2026 Alex Berezkin"
+        # Updates stay off until both are set in the build settings below (docs/UPDATES.md).
+        SUFeedURL: $(UPDATE_FEED_URL)
+        SUPublicEDKey: $(SPARKLE_PUBLIC_KEY)
+        SUEnableAutomaticChecks: true
+        # Russian texts are in ru.lproj/InfoPlist.strings.
+        NSMicrophoneUsageDescription: "Transcribation records your voice during a call so you get a transcript and a summary."
+        NSAudioCaptureUsageDescription: "Transcribation records the sound of the app you choose so you get a transcript and a summary of the call."
+        NSRemindersFullAccessUsageDescription: "Transcribation adds tasks from a call to Reminders when you ask it to."
+        NSCalendarsFullAccessUsageDescription: "Transcribation takes the meeting title and the invited people from the event the recording was made during. The calendar is never changed."
+    entitlements:
+      path: CallRecorder/App/CallRecorder.entitlements
+      properties:
+        com.apple.security.device.audio-input: true
+        com.apple.security.personal-information.calendars: true
+    settings:
+      base:
+        PRODUCT_NAME: Transcribation
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        PRODUCT_BUNDLE_IDENTIFIER: app.callrecorder.dev
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "15"
+        # Where appcast.xml is published (https) and the EdDSA public key from Sparkle's generate_keys.
+        # Empty: the app does not look for updates. Nothing is published until the developer decides where.
+        UPDATE_FEED_URL: ""
+        SPARKLE_PUBLIC_KEY: ""
+        # The signing team comes from the environment (export TRANSCRIBATION_TEAM=…) or is picked in Xcode;
+        # it is never written here, so the repository names nobody's Apple account.
+        DEVELOPMENT_TEAM: $(TRANSCRIBATION_TEAM)
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "Apple Development"
+        ENABLE_HARDENED_RUNTIME: YES
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: complete
+
+  CallRecorderMobile:
+    type: application
+    platform: iOS
+    sources:
+      - path: CallRecorderMobile/App
+        excludes:
+          - Info.plist
+          - CallRecorderMobile.entitlements
+    dependencies:
+      - package: CallRecorderKit
+        product: AudioCapture
+      - package: CallRecorderKit
+        product: CodexClient
+      - package: CallRecorderKit
+        product: Transcription
+      - package: CallRecorderKit
+        product: CallLibrary
+      - package: CallRecorderKit
+        product: Localization
+      - target: CallRecorderMobileBroadcast
+        embed: true
+    info:
+      path: CallRecorderMobile/App/Info.plist
+      properties:
+        CFBundleDisplayName: Transcribation
+        CFBundleName: Transcribation
+        NSMicrophoneUsageDescription: "Transcribation записывает ваш голос во время созвона, чтобы вы получили расшифровку и итоги."
+        NSRemindersFullAccessUsageDescription: "Transcribation добавляет задачи из созвона в Напоминания, когда вы об этом просите."
+        UIBackgroundModes: [audio]
+        UILaunchScreen: {}
+    entitlements:
+      path: CallRecorderMobile/App/CallRecorderMobile.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.app.callrecorder.dev
+    settings:
+      base:
+        PRODUCT_NAME: Transcribation
+        PRODUCT_BUNDLE_IDENTIFIER: app.callrecorder.dev.ios
+        DEVELOPMENT_TEAM: $(TRANSCRIBATION_TEAM)
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: complete
+        TARGETED_DEVICE_FAMILY: "1,2"
+
+  CallRecorderMobileBroadcast:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: CallRecorderMobile/Broadcast
+        excludes:
+          - Info.plist
+          - CallRecorderMobileBroadcast.entitlements
+    dependencies:
+      - package: CallRecorderKit
+        product: AudioCapture
+    info:
+      path: CallRecorderMobile/Broadcast/Info.plist
+      properties:
+        CFBundleDisplayName: Transcribation Broadcast
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.broadcast-services-upload
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).SampleHandler
+    entitlements:
+      path: CallRecorderMobile/Broadcast/CallRecorderMobileBroadcast.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.app.callrecorder.dev
+    settings:
+      base:
+        PRODUCT_NAME: "Transcribation Broadcast"
+        PRODUCT_BUNDLE_IDENTIFIER: app.callrecorder.dev.ios.broadcast
+        DEVELOPMENT_TEAM: $(TRANSCRIBATION_TEAM)
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: complete

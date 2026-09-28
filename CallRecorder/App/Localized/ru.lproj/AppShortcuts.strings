@@ -1,0 +1,7 @@
+/* What Siri listens for in Russian; every phrase keeps the app's name. */
+"Start recording in ${applicationName}" = "Начать запись в ${applicationName}";
+"Record the call in ${applicationName}" = "Записать звонок в ${applicationName}";
+"Stop recording in ${applicationName}" = "Остановить запись в ${applicationName}";
+"Last meeting summary in ${applicationName}" = "Итоги последней встречи в ${applicationName}";
+"What was decided in ${applicationName}" = "Что решили в ${applicationName}";
+"Mark this moment in ${applicationName}" = "Отметить важное в ${applicationName}";

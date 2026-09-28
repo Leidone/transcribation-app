@@ -1,0 +1,30 @@
+# Real call recordings and transcripts never leave the machine
+Corpus/*
+!Corpus/README.md
+
+# Models, build output, generated project
+*.mlmodelc
+.build/
+DerivedData/
+build/
+*.xcodeproj/
+*.xcworkspace/xcuserdata/
+.swiftpm/
+
+# Python
+Tools/eval/.venv/
+__pycache__/
+.pytest_cache/
+
+# Secrets / credentials
+auth.json
+.env*
+
+# macOS
+.DS_Store
+
+# Local tooling config (not part of the app)
+.claude/
+
+# Personal words the public export is checked against; never committed.
+Tools/release/private-patterns.txt

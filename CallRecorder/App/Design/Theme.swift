@@ -12,8 +12,9 @@ enum Motion {
     static let quick = Animation.snappy(duration: 0.28)
     /// Things that arrive on screen: a gentle spring.
     static let arrive = Animation.spring(duration: 0.65, bounce: 0.16)
-    /// Slow ambient motion (a floating icon, a drifting gradient).
-    static let ambient = Animation.easeInOut(duration: 6).repeatForever(autoreverses: true)
+    /// Slow ambient motion (a floating icon, a drifting gradient), played once: a motion that never stops keeps the
+    /// window redrawing many times a second for as long as the screen is open.
+    static let ambient = Animation.easeInOut(duration: 3)
 }
 
 /// Fades, lifts and un-blurs a view into place, one after another when given rising indexes.

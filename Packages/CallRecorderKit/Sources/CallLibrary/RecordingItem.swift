@@ -349,6 +349,27 @@ extension RecordingItem {
         }
     }
 
+    /// The people of the recording: voices given the same name are one person (the diarizer sometimes hears one
+    /// person as two voices, and naming them the same is how the person puts them back together), in the order
+    /// they were first heard.
+    public var voices: [VoiceGroup] {
+        var groups: [VoiceGroup] = []
+        for speaker in speakers {
+            let name = displayName(speaker.label)
+            if let index = groups.firstIndex(where: { $0.name == name }) {
+                groups[index] = groups[index].adding(speaker.label)
+            } else {
+                groups.append(VoiceGroup(name: name, labels: [speaker.label], isMe: speaker.isMe))
+            }
+        }
+        return groups
+    }
+
+    /// A copy with every one of `labels` named `newName`; an empty name gives each its own label back.
+    public func renamingVoices(_ labels: [String], to newName: String) -> RecordingItem {
+        labels.reduce(self) { $0.renamingSpeaker($1, to: newName) }
+    }
+
     /// The summary was written before the latest hand correction of the transcript, so it may be out of date.
     public var isAnalysisOutdated: Bool {
         guard let edited = transcriptEditedAt, let created = analysis?.createdAt else { return false }
@@ -360,3 +381,15 @@ extension RecordingItem {
         transcript.last { $0.time <= time }
     }
 }
+
+/// One person of a recording and the voices the diarizer heard for them.
+public struct VoiceGroup: Equatable, Sendable {
+    public let name: String
+    public let labels: [String]
+    public let isMe: Bool
+
+    func adding(_ label: String) -> VoiceGroup {
+        VoiceGroup(name: name, labels: labels + [label], isMe: isMe)
+    }
+}
+

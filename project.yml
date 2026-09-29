@@ -65,8 +65,8 @@ targets:
         PRODUCT_NAME: Transcribation
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         PRODUCT_BUNDLE_IDENTIFIER: app.callrecorder.dev
-        MARKETING_VERSION: "1.0.0"
-        CURRENT_PROJECT_VERSION: "15"
+        MARKETING_VERSION: "1.0.1"
+        CURRENT_PROJECT_VERSION: "16"
         # Where appcast.xml is published (https) and the EdDSA public key from Sparkle's generate_keys.
         # Empty: the app does not look for updates. Nothing is published until the developer decides where.
         UPDATE_FEED_URL: ""

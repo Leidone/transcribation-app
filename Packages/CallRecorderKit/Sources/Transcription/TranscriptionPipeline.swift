@@ -34,6 +34,8 @@ public actor TranscriptionPipeline {
 
     private var recogniser: AsrManager?
     private var speechDetector: VadManager?
+    /// Transcriptions and live phrases in progress: the models are never let go under them.
+    private var jobsInProgress = 0
 
     public init() {}
 
@@ -41,6 +43,8 @@ public actor TranscriptionPipeline {
         input: PipelineInput,
         progress: @Sendable (PipelineStage) -> Void = { _ in }
     ) async throws -> TranscriptionResult {
+        jobsInProgress += 1
+        defer { jobsInProgress -= 1 }
         let clock = ContinuousClock()
         let started = clock.now
         progress(.loadingModels)
@@ -72,6 +76,8 @@ public actor TranscriptionPipeline {
         audio: URL,
         progress: @Sendable (PipelineStage) -> Void = { _ in }
     ) async throws -> TranscriptionResult {
+        jobsInProgress += 1
+        defer { jobsInProgress -= 1 }
         let clock = ContinuousClock()
         let started = clock.now
         progress(.loadingModels)
@@ -94,6 +100,8 @@ public actor TranscriptionPipeline {
     /// full transcript; the model is loaded on first use.
     public func recognisePhrase(_ samples: [Float]) async throws -> String {
         guard !samples.isEmpty else { return "" }
+        jobsInProgress += 1
+        defer { jobsInProgress -= 1 }
         let recogniser = try await loadRecogniser()
         var chunk = samples
         if chunk.count < Self.minimumSamples {
@@ -165,6 +173,18 @@ public actor TranscriptionPipeline {
         }
         return (turns, result.speakerDatabase ?? [:])
     }
+
+    /// Lets the recognition models go (about a gigabyte of memory); the next transcription loads them again from
+    /// disk in a few seconds. The app calls it once it has been idle for a while.
+    public func releaseModels() async {
+        guard jobsInProgress == 0 else { return }
+        await recogniser?.cleanup()
+        recogniser = nil
+        speechDetector = nil
+    }
+
+    /// Whether the models are in memory now.
+    public var hasModelsLoaded: Bool { recogniser != nil }
 
     private func loadRecogniser(progress: (@Sendable (Double) -> Void)? = nil) async throws -> AsrManager {
         if let recogniser { return recogniser }

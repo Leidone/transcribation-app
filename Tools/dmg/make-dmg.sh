@@ -3,8 +3,11 @@
 #   --bundle-codex   embed the installed `codex` binary (unmodified, keeps OpenAI's signature) in Contents/Helpers
 #   --quarantine     mark the dmg as downloaded from the internet, to reproduce what another Mac's Gatekeeper sees
 #   --public         a public release: built from scratch out of the committed files in a neutral folder, and
-#                    signed ad hoc. No certificate, so no developer name, email or team ID ends up in the app, and
-#                    the paths the compiler records name no one's home folder. The app is not notarized either way.
+#                    signed with the self-signed "Transcribation" certificate from the Keychain (PUBLIC_IDENTITY
+#                    names another), or ad hoc when there is none. Neither carries a developer name, email or team
+#                    ID, and the paths the compiler records name no one's home folder. The one certificate keeps the
+#                    app the same to macOS from release to release, so its permissions stay granted; ad hoc builds
+#                    lose them with every update. The app is not notarized either way.
 # SIGN_IDENTITY overrides the signing identity (default: "Apple Development").
 set -euo pipefail
 
@@ -35,7 +38,11 @@ SIGNING=()
 SOURCE="$ROOT"
 RUNTIME=(--options runtime)
 if [ "$PUBLIC" -eq 1 ]; then
-  IDENTITY="-"
+  IDENTITY="${PUBLIC_IDENTITY:-Transcribation}"
+  if ! security find-identity -p codesigning | grep -qF "\"$IDENTITY\""; then
+    echo "note: no \"$IDENTITY\" certificate in the Keychain; signing ad hoc" >&2
+    IDENTITY="-"
+  fi
   # Without a team, the hardened runtime's library validation refuses to load Sparkle ("different Team IDs"). It
   # matters only for notarization, which an ad hoc build never gets, so it is left off.
   RUNTIME=()
@@ -131,8 +138,8 @@ mkdir -p "$STAGING"
 cp -R "$APP" "$STAGING/"
 ln -s /Applications "$STAGING/Applications"
 hdiutil create -volname "Transcribation" -srcfolder "$STAGING" -ov -format UDZO "$DMG" >/dev/null
-# A disk image takes only a real certificate; an ad hoc public dmg stays unsigned (the app inside is signed).
-[ "$PUBLIC" -eq 1 ] || codesign --force --sign "$IDENTITY" "$DMG"
+# A disk image takes only a certificate; an ad hoc dmg stays unsigned (the app inside is signed).
+[ "$IDENTITY" = "-" ] || codesign --force --sign "$IDENTITY" "$DMG"
 
 if [ "$QUARANTINE" -eq 1 ]; then
   xattr -w com.apple.quarantine "0081;$(printf '%x' "$(date +%s)");Safari;" "$DMG"

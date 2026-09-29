@@ -89,7 +89,7 @@ The interface follows the apple.com look: Liquid Glass, a living gradient backgr
 
 Requires an Apple Silicon Mac with **macOS 26+**.
 
-1. Download `Transcribation.dmg` from [release 1.0.0](https://github.com/Leidone/transcribation-app/releases/tag/v1.0.0) and drag the app into Applications.
+1. Download `Transcribation.dmg` from the [latest release](https://github.com/Leidone/transcribation-app/releases/latest) and drag the app into Applications.
 2. The app is not notarized (there is no paid Apple Developer Program membership), so Gatekeeper warns about an unidentified developer on first launch. Remove the quarantine flag:
 
    ```bash
@@ -168,7 +168,7 @@ Tools/dmg/make-dmg.sh --bundle-codex
 cd Packages/CallRecorderKit && swift test
 ```
 
-341 tests on Swift Testing in five targets — `LocalizationTests`, `AudioCaptureTests`, `TranscriptionTests`, `CodexClientTests`, `CallLibraryTests` (JSON-RPC, the AI clients, search, export and PDF, voice memory, transcript edits, file formats, questions to meetings, marks, the live transcript's phrase cutting, settings reaching the helpers, and a check that every Russian interface text has an English twin). GitHub Actions runs them and builds the macOS app on pushes and pull requests. Recognition quality (WER/DER) is measured by a separate Python tool in [`Tools/eval`](Tools/eval).
+344 tests on Swift Testing in five targets — `LocalizationTests`, `AudioCaptureTests`, `TranscriptionTests`, `CodexClientTests`, `CallLibraryTests` (JSON-RPC, the AI clients, search, export and PDF, voice memory, transcript edits, file formats, questions to meetings, marks, the live transcript's phrase cutting, settings reaching the helpers, and a check that every Russian interface text has an English twin). GitHub Actions runs them and builds the macOS app on pushes and pull requests. Recognition quality (WER/DER) is measured by a separate Python tool in [`Tools/eval`](Tools/eval).
 
 ## Repository layout
 
@@ -192,7 +192,7 @@ Corpus/                          real recordings for measurements — never comm
 
 ## Status
 
-- **macOS** — [1.0.0 released](https://github.com/Leidone/transcribation-app/releases/tag/v1.0.0); live transcription remains beta, and automatic updates are not configured yet. The About window and Settings show the version and author.
+- **macOS** — [released](https://github.com/Leidone/transcribation-app/releases/latest); live transcription remains beta, and automatic updates are not configured yet. The About window and Settings show the version and author.
 - **iOS** — experimental. Import → transcription → Claude summary is verified in the simulator; the app installs and launches on an iPhone. The "OpenAI key" and "Other AI" providers are covered by tests but have not been tried with real keys. ReplayKit recording builds, but the full "record → transcribe" path on a real call has not been exercised yet.
 - **Roadmap** — task list parity with Mac, a notification when a broadcast ends in the background, iPad, moving the duplicated iOS models into a shared target.
 

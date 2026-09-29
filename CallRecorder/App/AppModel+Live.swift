@@ -47,5 +47,6 @@ extension AppModel {
             Task { await transcriber.stop() }
         }
         liveTranscriber = nil
+        releaseModelsWhenIdle()
     }
 }

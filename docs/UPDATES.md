@@ -36,8 +36,9 @@
 ## Каждый выпуск
 
 1. Поднимите `MARKETING_VERSION` и `CURRENT_PROJECT_VERSION` в `project.yml` (Sparkle сравнивает `CURRENT_PROJECT_VERSION`).
-2. `Tools/dmg/make-dmg.sh --public` — соберёт dmg с подписью без сертификата (в приложение не попадут имя, почта
-   и Team ID разработчика).
+2. `Tools/dmg/make-dmg.sh --public` — соберёт dmg, подписанный собственным сертификатом «Transcribation» из Связки
+   ключей (без него — без сертификата). В приложение не попадут имя, почта и Team ID разработчика, а один и тот же
+   сертификат сохраняет выданные macOS разрешения от версии к версии.
 3. `DOWNLOAD_URL_PREFIX=https://…/ Tools/release/make-appcast.sh` — положит dmg в `build/updates/` и перепишет
    `appcast.xml`, подписав его ключом из Связки ключей. Скрипт ничего не загружает.
 4. Загрузите содержимое `build/updates/` в выбранное место. Приложения у всех найдут версию в течение суток

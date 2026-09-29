@@ -159,13 +159,29 @@ struct TranscriptTab: View {
 
     var body: some View {
         let important = recording.importantLineIDs
-        LazyVStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 0) {
+            // Outside the lazy list, so the voices stay laid out while the lines below load and unload.
             SpeakerLegend(
-                speakers: recording.speakers, displayName: recording.displayName,
+                voices: recording.voices,
                 suggestions: (recording.meeting?.attendees ?? []).filter { !recording.speakerNames.names.values.contains($0) },
                 onRename: onRename
             )
-                .padding(.bottom, 12)
+            .padding(.bottom, 18)
+            lines(important: important)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(20)
+        // A long transcript is thousands of points tall: a glass pane that size is costly to draw and flickers as
+        // the lazy lines come and go, so it gets a plain, still backing instead.
+        .background(.background.secondary.opacity(0.55), in: .rect(cornerRadius: Theme.cardRadius))
+        .overlay(RoundedRectangle(cornerRadius: Theme.cardRadius).strokeBorder(.separator.opacity(0.5)))
+        .animation(Motion.smooth, value: recording.voices)
+        .animation(Motion.quick, value: currentLineID)
+        .animation(Motion.quick, value: important)
+    }
+
+    private func lines(important: Set<TranscriptLine.ID>) -> some View {
+        LazyVStack(alignment: .leading, spacing: 6) {
             if recording.transcriptEditedAt != nil {
                 Label(tr("Текст исправлен вручную", "Text corrected by hand"), systemImage: "pencil.line")
                     .font(.caption)
@@ -189,11 +205,6 @@ struct TranscriptTab: View {
                 .id(line.id)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .glassCard(padding: 20)
-        .animation(Motion.smooth, value: recording.speakers.map { recording.displayName($0.label) })
-        .animation(Motion.quick, value: currentLineID)
-        .animation(Motion.quick, value: important)
     }
 }
 
@@ -229,12 +240,12 @@ private struct TranscriptRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(Theme.speakerColor(line.speaker, isMe: line.isMe))
+                        .fill(Theme.speakerColor(name, isMe: line.isMe))
                         .frame(width: 8, height: 8)
                     Text(name)
                         .font(.subheadline.weight(.semibold))
                         .contentTransition(.opacity)
-                        .foregroundStyle(Theme.speakerColor(line.speaker, isMe: line.isMe))
+                        .foregroundStyle(Theme.speakerColor(name, isMe: line.isMe))
                     if isImportant {
                         Image(systemName: "star.fill")
                             .font(.caption)
@@ -319,24 +330,24 @@ private struct TranscriptRow: View {
 
 /// The voices of a recording as chips; a click opens a small editor to give the voice a name.
 private struct SpeakerLegend: View {
-    let speakers: [(label: String, isMe: Bool)]
-    let displayName: (String) -> String
+    /// One chip per person: voices given the same name are shown, coloured and renamed together.
+    let voices: [VoiceGroup]
     /// Invited people from the calendar who have no voice yet.
     let suggestions: [String]
     let onRename: (String, String) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                ForEach(speakers, id: \.label) { speaker in
+            FlowLayout(spacing: 8) {
+                ForEach(voices, id: \.labels) { voice in
                     SpeakerChip(
-                        label: speaker.label, isMe: speaker.isMe, name: displayName(speaker.label),
-                        suggestions: speaker.isMe ? [] : suggestions,
-                        onRename: { onRename(speaker.label, $0) }
+                        label: voice.labels[0], isMe: voice.isMe, name: voice.name, voiceCount: voice.labels.count,
+                        suggestions: voice.isMe ? [] : suggestions,
+                        onRename: { newName in voice.labels.forEach { onRename($0, newName) } }
                     )
                 }
             }
-            Text(tr("Нажмите на имя, чтобы переименовать голос. Имя запомнится, и в следующих звонках этот голос подпишется сам.", "Click a name to rename the voice. The name is remembered, and this voice is named by itself in later calls."))
+            Text(tr("Нажмите на имя, чтобы переименовать голос. Имя запомнится, и в следующих звонках этот голос подпишется сам. Если один человек распознан как два голоса, дайте им одинаковое имя — они объединятся.", "Click a name to rename the voice. The name is remembered, and this voice is named by itself in later calls. If one person was heard as two voices, give them the same name and they become one."))
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }
@@ -347,6 +358,8 @@ private struct SpeakerChip: View {
     let label: String
     let isMe: Bool
     let name: String
+    /// How many diarizer voices this person has (more than one once the person merged them by name).
+    let voiceCount: Int
     let suggestions: [String]
     let onRename: (String) -> Void
 
@@ -363,11 +376,17 @@ private struct SpeakerChip: View {
         } label: {
             HStack(spacing: 7) {
                 Circle()
-                    .fill(Theme.speakerColor(label, isMe: isMe))
+                    .fill(Theme.speakerColor(name, isMe: isMe))
                     .frame(width: 9, height: 9)
                 Text(name)
                     .font(.subheadline.weight(.semibold))
                     .contentTransition(.opacity)
+                if voiceCount > 1 {
+                    Text("×\(voiceCount)")
+                        .font(.caption2.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                        .help(tr("Объединено голосов: \(voiceCount)", "Voices merged: \(voiceCount)"))
+                }
                 Image(systemName: "pencil")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)

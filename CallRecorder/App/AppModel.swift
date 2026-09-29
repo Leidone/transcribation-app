@@ -61,6 +61,8 @@ final class AppModel {
     var liveLines: [LiveLine] = []
     var liveStats = LiveStats()
     @ObservationIgnored var liveTranscriber: LiveTranscriber?
+    /// Lets the recognition models go after a minute with nothing to transcribe (see `releaseModelsWhenIdle`).
+    @ObservationIgnored var modelRelease: Task<Void, Never>?
     @ObservationIgnored var liveAudioSink: AsyncStream<LiveAudio>.Continuation?
     @ObservationIgnored var liveTasks: [Task<Void, Never>] = []
     /// Filters the sidebar; empty shows every recording.
@@ -337,10 +339,23 @@ final class AppModel {
             await reload()
         } catch {
             processingErrors[recordingID] = error.localizedDescription
+            releaseModelsWhenIdle()
             return
         }
         processingStages[recordingID] = nil
+        releaseModelsWhenIdle()
         await compress([recordingID])
+    }
+
+    /// The recognition models hold about a gigabyte: they go a minute after the last transcription, unless a call
+    /// is being recorded (the live transcript uses them) or another recording is being transcribed.
+    func releaseModelsWhenIdle() {
+        modelRelease?.cancel()
+        modelRelease = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(60))
+            guard let self, !Task.isCancelled, !self.isRecording, self.processingStages.isEmpty else { return }
+            await self.pipeline.releaseModels()
+        }
     }
 
     func toggleTask(_ taskID: TaskItem.ID, in recordingID: RecordingItem.ID) {
